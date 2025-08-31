@@ -1,3 +1,4 @@
+import type { CategoryVariablesType } from "./DTO/category-variables";
 import type { GamesType } from "./DTO/games-type";
 
 export type GamesRequest = {
@@ -63,7 +64,25 @@ export const SpeedRunApiService = {
 			id: category.id,
 			name: category.name,
 		}));
-		console.log(ret);
 		return ret;
+	},
+
+	async fetchCategoryVaiablesByCategoryId(id: string): Promise<CategoryVariablesType[]> {
+		const res = await fetch(`https://www.speedrun.com/api/v1/categories/${id}/variables`);
+		const data = await res.json().then((data) => data.data);
+		return data.map(
+			(res: {
+				id: string;
+				name: string;
+				values: { values: { [key: string]: { label: string } } };
+			}) => ({
+				categoryId: res.id,
+				name: res.name,
+				values: Object.entries(res.values.values).map(([id, obj]) => ({
+					id: id,
+					name: obj.label,
+				})),
+			})
+		);
 	},
 };
