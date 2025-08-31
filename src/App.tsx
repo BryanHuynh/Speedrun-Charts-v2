@@ -1,30 +1,35 @@
-import { Link, Route, Routes } from "react-router-dom";
+import { Link as RouterLink, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/home/Home";
 import GameSelectionPage from "./pages/gameSelection/GameSelectionPage";
 import Game from "./pages/game/Game";
+import { AppBar, Toolbar, Container, Link, Stack } from "@mui/material";
 
 function App() {
 	return (
 		<div>
-			<header className="top-0 z-50">
-				<nav className="mx-auto max-w-6xl px-4 py-3 space-x-4">
-					<Link to="/" className="text-blue-400 hover:text-blue-300">
-						Home
-					</Link>
-					<Link to="/game" className="text-blue-400 hover:text-blue-300">
-						Games
-					</Link>
-				</nav>
-			</header>
+			<AppBar position="static" color="default" elevation={1}>
+				<Toolbar>
+					<Container maxWidth="lg" sx={{ px: 0 }}>
+						<Stack direction="row" spacing={3} alignItems="center" justifyContent="center">
+							<Link component={RouterLink} to="/" color="primary.main" underline="hover">
+								Home
+							</Link>
+							<Link component={RouterLink} to="/game" color="primary.main" underline="hover">
+								Games
+							</Link>
+						</Stack>
+					</Container>
+				</Toolbar>
+			</AppBar>
 
-			<main className="container flex-1 w-full mx-auto min-w-7xl max-w-6xl p-4">
+			<Container component="main" maxWidth="lg" sx={{ py: 2 }}>
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/game" element={<GameSelectionPage />} />
 					<Route path="/game/:id" element={<Game />} />
 				</Routes>
-			</main>
+			</Container>
 		</div>
 	);
 }

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { SpeedRunApiService, type GamesRequest } from "../../services/Speedrun-api-service";
 import { GameCard } from "../../components/Game-Card";
 import { SearchGames } from "../../components/Search-Games";
+import { Box, Button, Stack } from "@mui/material";
+import Grid from "@mui/material/Grid";
 
 export default function GameSelectionPage() {
 	const [games, setGames] = useState<GamesRequest>();
@@ -14,23 +16,21 @@ export default function GameSelectionPage() {
 	}, []);
 
 	return (
-		<div className="p-4">
-			<div className="my-5">
-				<SearchGames setGames={setGames}/>
-			</div>
-			<div className="grid grid-cols-4 gap-4">
+		<Box>
+			<Box my={3}>
+				<SearchGames setGames={setGames} />
+			</Box>
+			<Grid container spacing={2} columns={4}>
 				{games &&
 					games.games.map((game) => (
-						<div
-							key={game.id}
-							className="rounded-lg border border-neutral-700 bg-neutral-800/40 p-4 hover:bg-neutral-800 transition-colors"
-						>
+						<Grid size={{ xs: 1 }} key={game.id}>
 							<GameCard game={game} />
-						</div>
+						</Grid>
 					))}
-			</div>
-			<div className="mt-6 flex justify-center gap-3">
-				<button
+			</Grid>
+			<Stack direction="row" justifyContent="center" spacing={2} mt={4}>
+				<Button
+					variant="outlined"
 					onClick={async () => {
 						if (!games?.prev) return;
 						try {
@@ -41,12 +41,12 @@ export default function GameSelectionPage() {
 							console.error("Error fetching previous games:", error);
 						}
 					}}
-					className="rounded border border-blue-600 px-4 py-2 text-blue-100 hover:bg-blue-600 hover:text-white disabled:opacity-50"
 					disabled={!games?.prev}
 				>
 					Previous
-				</button>
-				<button
+				</Button>
+				<Button
+					variant="outlined"
 					onClick={async () => {
 						if (!games?.next) return;
 						try {
@@ -57,12 +57,11 @@ export default function GameSelectionPage() {
 							console.error("Error fetching next games:", error);
 						}
 					}}
-					className="rounded border border-blue-600 px-4 py-2 text-blue-100 hover:bg-blue-600 hover:text-white disabled:opacity-50"
 					disabled={!games?.next}
 				>
 					Next
-				</button>
-			</div>
-		</div>
+				</Button>
+			</Stack>
+		</Box>
 	);
 }

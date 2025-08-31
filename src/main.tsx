@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
 
 const theme = createTheme({
 	palette: {
@@ -25,6 +26,7 @@ const theme = createTheme({
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
 		<ThemeProvider theme={theme}>
+			<CssBaseline />
 			<BrowserRouter>
 				<App />
 			</BrowserRouter>

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import type { GamesType } from "../../services/DTO/games-type";
 import { SpeedRunApiService } from "../../services/Speedrun-api-service";
 import GameCategorySelection from "../../components/Game-Category-Selection";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 
 export default function Game() {
 	const { id } = useParams(); // extract `id` from the URL
@@ -34,28 +35,31 @@ export default function Game() {
 	}, [game]);
 
 	return (
-		<div className="container">
+		<Box>
 			{game && (
-				<div className="w-full border-2 border-amber-100 flex flex-row gap-5 p-5 rounded-md">
-					<img
-						src={`https://www.speedrun.com/static/game/${id}/cover.jpg?v=${id}`}
-						alt={game.names.international}
-						className="h-48 w-fit rounded-md object-cover"
-					/>
-					<div className="flex flex-col text-left">
-						<span className="mt-2 text-lg font-semibold">
-							{game.names.international}
-						</span>
-						<span className="mt-2 text-lg font-semibold">{game.released}</span>
-						<span className="mt-2 text-lg font-semibold">{platforms?.join(", ")}</span>
-					</div>
-				</div>
+				<Paper variant="outlined" sx={{ p: 3, mb: 2 }}>
+					<Stack direction="row" spacing={2} alignItems="flex-start">
+						<Box
+							component="img"
+							sx={{ height: 192, width: "auto", borderRadius: 1, objectFit: "cover" }}
+							src={`https://www.speedrun.com/static/game/${id}/cover.jpg?v=${id}`}
+							alt={game.names.international}
+						/>
+						<Box textAlign="left">
+							<Typography variant="h6" fontWeight={600} gutterBottom>
+								{game.names.international}
+							</Typography>
+							<Typography variant="subtitle1">{game.released}</Typography>
+							<Typography variant="subtitle1">{platforms?.join(", ")}</Typography>
+						</Box>
+					</Stack>
+				</Paper>
 			)}
 			{game && (
-				<div className="w-full border-2 border-amber-100 flex flex-row gap-5 p-5 rounded-md">
+				<Paper variant="outlined" sx={{ p: 3 }}>
 					<GameCategorySelection gameId={game.id} onSelectCategory={setCategory} />
-				</div>
+				</Paper>
 			)}
-		</div>
+		</Box>
 	);
 }
