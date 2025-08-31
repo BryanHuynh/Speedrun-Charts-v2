@@ -6,7 +6,7 @@ import Game from "./pages/game/Game";
 
 function App() {
 	return (
-		<div className="min-h-screen flex flex-col">
+		<div>
 			<header className="top-0 z-50">
 				<nav className="mx-auto max-w-6xl px-4 py-3 space-x-4">
 					<Link to="/" className="text-blue-400 hover:text-blue-300">
@@ -18,7 +18,7 @@ function App() {
 				</nav>
 			</header>
 
-			<main className="flex-1 w-full mx-auto max-w-6xl p-4">
+			<main className="container flex-1 w-full mx-auto min-w-7xl max-w-6xl p-4">
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/game" element={<GameSelectionPage />} />

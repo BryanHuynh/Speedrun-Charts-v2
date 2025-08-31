@@ -41,7 +41,29 @@ export const SpeedRunApiService = {
 		);
 		const data = await res.json();
 		const { prev, next } = mapPagination(data);
-		console.log(data);
 		return { games: data?.data ?? [], prev, next };
+	},
+
+	async fetchGamesById(id: string): Promise<GamesType> {
+		const res = await fetch(`https://www.speedrun.com/api/v1/games/${id}`);
+		const data = await res.json();
+		return data.data;
+	},
+
+	async fetchPlatformById(id: string): Promise<string> {
+		const res = await fetch(`https://www.speedrun.com/api/v1/platforms/${id}`);
+		const data = await res.json();
+		return data.data.name;
+	},
+
+	async fetchGameCategoriesById(id: string): Promise<{ id: string; name: string }[]> {
+		const res = await fetch(`https://www.speedrun.com/api/v1/games/${id}/categories`);
+		const data = await res.json();
+		const ret = data.data.map((category: { id: string; name: string }) => ({
+			id: category.id,
+			name: category.name,
+		}));
+		console.log(ret);
+		return ret;
 	},
 };
