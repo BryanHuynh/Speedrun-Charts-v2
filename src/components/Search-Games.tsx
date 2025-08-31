@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { SpeedRunApiService, type GamesRequest } from "../services/Speedrun-api-service";
+import { TextField, Stack } from "@mui/material";
 
 interface SearchGamesProps {
 	setGames: (games: GamesRequest) => void;
@@ -15,15 +16,15 @@ export function SearchGames({ setGames }: SearchGamesProps) {
 		}
 		searchGame(searchTerm);
 	}, [searchTerm]);
-	return (
-		<div className="flex items-center space-x-2">
-			<input
-				type="text"
-				placeholder="Search games..."
-				value={searchTerm}
-				onChange={(e) => setSearchTerm(e.target.value)}
-				className="flex-grow rounded border border-neutral-700 bg-neutral-800/40 p-2 text-white placeholder-neutral-500 focus:border-blue-600 focus:outline-none"
-			/>
-		</div>
-	);
+    return (
+        <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+                fullWidth
+                size="small"
+                label="Search games"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </Stack>
+    );
 }

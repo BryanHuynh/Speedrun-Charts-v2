@@ -6,6 +6,6 @@ export type GamesType = {
 	};
 	abbreviation: string;
 	weblink: string;
+	released: string;
+	platforms: string[];
 };
-
-
