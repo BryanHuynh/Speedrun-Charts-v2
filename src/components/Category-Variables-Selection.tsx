@@ -11,10 +11,12 @@ import React, { useEffect, useState } from "react";
 
 export type CategoryVariablesSelectionProps = {
 	categoryVariables: CategoryVariablesType[];
+	configRef: React.RefObject<{ [key: string]: string }>;
 };
 
 const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 	categoryVariables,
+	configRef,
 }) => {
 	const [config, setConfig] = useState<{ [key: string]: string }>({});
 	useEffect(() => {
@@ -26,7 +28,11 @@ const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 			setConfig(temp_config);
 		};
 		assignDefaultsToConfig();
-	}, []);
+	}, [categoryVariables]);
+
+	useEffect(() => {
+		configRef.current = config;
+	}, [config, configRef]);
 
 	const handleChange = (event: SelectChangeEvent, categoryVariable: CategoryVariablesType) => {
 		const category = categoryVariable.categoryId;

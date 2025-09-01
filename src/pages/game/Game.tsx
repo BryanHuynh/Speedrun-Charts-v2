@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { GamesType } from "../../services/DTO/games-type";
 import { SpeedRunApiService } from "../../services/Speedrun-api-service";
 import GameCategorySelection from "../../components/Game-Category-Selection";
-import { Box, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 import type { CategoryVariablesType } from "../../services/DTO/category-variables";
 import CategoryVariablesSelection from "../../components/Category-Variables-Selection";
 
@@ -14,6 +14,7 @@ export default function Game() {
 	const [platforms, setPlatforms] = useState<string[]>();
 	const [category, setCategory] = useState<string>();
 	const [categoryVariables, setCategoryVariables] = useState<CategoryVariablesType[]>([]);
+	const variableAssignmentRef = useRef<{ [key: string]: string }>({});
 
 	useEffect(() => {
 		async function fetchGame() {
@@ -38,14 +39,22 @@ export default function Game() {
 	}, [game]);
 
 	useEffect(() => {
+		setCategoryVariables([]);
+	}, [category]);
+
+	useEffect(() => {
 		async function fetchCategoryVariables() {
 			if (category == undefined) return;
 			const res = await SpeedRunApiService.fetchCategoryVaiablesByCategoryId(category);
-			console.log(res);
 			setCategoryVariables(res);
 		}
 		fetchCategoryVariables();
 	}, [category]);
+
+	const handleGenerate = () => {
+		if (!variableAssignmentRef.current) return;
+		console.log(variableAssignmentRef.current);
+	};
 
 	return (
 		<Box>
@@ -72,7 +81,15 @@ export default function Game() {
 				<Paper variant="outlined" sx={{ p: 3 }}>
 					<GameCategorySelection gameId={game.id} onSelectCategory={setCategory} />
 					{categoryVariables.length > 0 && (
-						<CategoryVariablesSelection categoryVariables={categoryVariables} />
+						<Box>
+							<CategoryVariablesSelection
+								categoryVariables={categoryVariables}
+								configRef={variableAssignmentRef}
+							/>
+							<Button variant="contained" onClick={handleGenerate}>
+								Generate Graph
+							</Button>
+						</Box>
 					)}
 				</Paper>
 			)}
