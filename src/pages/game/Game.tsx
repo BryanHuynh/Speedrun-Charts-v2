@@ -6,6 +6,7 @@ import GameCategorySelection from "../../components/Game-Category-Selection";
 import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 import type { CategoryVariablesType } from "../../services/DTO/category-variables";
 import CategoryVariablesSelection from "../../components/Category-Variables-Selection";
+import WRLineChart from "../../components/WR-Line-Chart";
 
 export default function Game() {
 	const { id } = useParams(); // extract `id` from the URL
@@ -40,6 +41,7 @@ export default function Game() {
 
 	useEffect(() => {
 		setCategoryVariables([]);
+		console.log("category:", category);
 	}, [category]);
 
 	useEffect(() => {
@@ -53,6 +55,7 @@ export default function Game() {
 
 	const handleGenerate = () => {
 		if (!variableAssignmentRef.current) return;
+		console.log(variableAssignmentRef);
 	};
 
 	return (
@@ -92,6 +95,7 @@ export default function Game() {
 					)}
 				</Paper>
 			)}
+			<WRLineChart />
 		</Box>
 	);
 }
