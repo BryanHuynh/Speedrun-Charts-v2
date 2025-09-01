@@ -146,21 +146,21 @@ export const SpeedRunApiService = {
 		filters: { [key: string]: string }
 	): Promise<RunsType> {
 		const base = "https://www.speedrun.com/api/v1/runs";
-		const out: RunType[] = [];
+		let out: RunType[] = [];
 		const max_bulk = 200;
 		let uri = `${base}?game=${gameId}&category=${category}&orderby=date&direction=desc&max=${max_bulk}`;
 		for (;;) {
 			const res = await fetch(uri);
-			if (res.ok!) break;
+			if (!res.ok) break;
 			const json = await res.json();
 			let data: srcRunsData[] = json.data;
 			const pagination: srcPagination = json.pagination;
 
 			data = data.filter((run) => {
 				const run_values = run.values;
-				return Object.keys(filters).reduce((_, curr) => {
-					if (!run_values[curr] && run_values[curr] != filters[curr]) return false;
-					return true;
+				return Object.keys(filters).reduce((prev, curr) => {
+					if (run_values[curr] != filters[curr]) return false;
+					return prev && true;
 				}, true);
 			});
 			const _data = data.map((run) => ({
@@ -178,7 +178,7 @@ export const SpeedRunApiService = {
 					ingame_t: run.times.ingame_t,
 				},
 			}));
-			out.concat(_data);
+			out = out.concat(_data);
 			const next = pagination.links.find((link) => link.rel == "next");
 			if (!next) break;
 			uri = next.uri;
