@@ -53,7 +53,6 @@ export default function Game() {
 
 	const handleGenerate = () => {
 		if (!variableAssignmentRef.current) return;
-		console.log(variableAssignmentRef.current);
 	};
 
 	return (
