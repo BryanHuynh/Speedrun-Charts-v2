@@ -74,10 +74,11 @@ export const SpeedRunApiService = {
 			(res: {
 				id: string;
 				name: string;
-				values: { values: { [key: string]: { label: string } } };
+				values: { values: { [key: string]: { label: string } }; default: string };
 			}) => ({
 				categoryId: res.id,
 				name: res.name,
+				default: res.values.default,
 				values: Object.entries(res.values.values).map(([id, obj]) => ({
 					id: id,
 					name: obj.label,

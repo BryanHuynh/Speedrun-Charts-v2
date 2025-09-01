@@ -1,28 +1,71 @@
-import { Box, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import {
+	Box,
+	FormControl,
+	InputLabel,
+	MenuItem,
+	Select,
+	type SelectChangeEvent,
+} from "@mui/material";
 import type { CategoryVariablesType } from "../services/DTO/category-variables";
+import React, { useEffect, useState } from "react";
 
 export type CategoryVariablesSelectionProps = {
 	categoryVariables: CategoryVariablesType[];
 };
 
-/**
- * Renders a MUI ToggleButtonGroup for each variable, allowing single selection per variable.
- */
 const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 	categoryVariables,
 }) => {
+	const [config, setConfig] = useState<{ [key: string]: string }>({});
+	useEffect(() => {
+		const assignDefaultsToConfig = () => {
+			const temp_config: { [key: string]: string } = {};
+			categoryVariables.forEach((variable) => {
+				temp_config[variable.categoryId] = variable.default;
+			});
+			setConfig(temp_config);
+		};
+		assignDefaultsToConfig();
+	}, []);
+
+	const handleChange = (event: SelectChangeEvent, categoryVariable: CategoryVariablesType) => {
+		const category = categoryVariable.categoryId;
+		const value = event.target.value as string;
+		setConfig((prev) => ({
+			...prev,
+			[category]: value,
+		}));
+	};
+
 	return (
-		<Box display="flex" gap={2}>
-			{categoryVariables.map((categoryVariable, idx) => (
-				<Box key={`${categoryVariable.categoryId}-${categoryVariable.name ?? idx}`.toString()}>
-					<Typography>{categoryVariable.name}</Typography>
-					<ToggleButtonGroup size="small" aria-label="Large sizes">
-						{categoryVariable.values.map((value, i) => (
-							<ToggleButton key={`${categoryVariable.categoryId}-${categoryVariable.name ?? idx}-${value.id}-${i}`} value={value.name}>
-								{value.name}
-							</ToggleButton>
-						))}
-					</ToggleButtonGroup>
+		<Box sx={{ display: "flex", flexWrap: "wrap" }} gap={2}>
+			{categoryVariables.map((categoryVariable) => (
+				<Box key={categoryVariable.categoryId}>
+					<FormControl
+						fullWidth
+						sx={{ minWidth: "250px", width: "fit-content", marginBottom: 2 }}
+					>
+						<InputLabel
+							id={`Category-variable-select-label-${categoryVariable.categoryId}`}
+						>
+							{categoryVariable.name}
+						</InputLabel>
+						{Object.keys(config).length > 0 && (
+							<Select
+								labelId={`Category-variable-select-label-${categoryVariable.categoryId}`}
+								id={`variable-select-${categoryVariable.categoryId}`}
+								label={categoryVariable.name}
+								value={config[categoryVariable.categoryId]}
+								onChange={(event) => handleChange(event, categoryVariable)}
+							>
+								{categoryVariable.values.map((value) => (
+									<MenuItem key={value.id} value={value.id}>
+										{value.name}
+									</MenuItem>
+								))}
+							</Select>
+						)}
+					</FormControl>
 				</Box>
 			))}
 		</Box>
