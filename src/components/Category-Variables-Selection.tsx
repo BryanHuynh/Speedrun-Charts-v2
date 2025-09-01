@@ -64,11 +64,13 @@ const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 								value={config[categoryVariable.categoryId]}
 								onChange={(event) => handleChange(event, categoryVariable)}
 							>
-								{categoryVariable.values.map((value) => (
-									<MenuItem key={value.id} value={value.id}>
-										{value.name}
-									</MenuItem>
-								))}
+								{[{ id: "Any", name: "Any" }, ...categoryVariable.values].map(
+									(value) => (
+										<MenuItem key={value.id} value={value.id}>
+											{value.name}
+										</MenuItem>
+									)
+								)}
 							</Select>
 						)}
 					</FormControl>
