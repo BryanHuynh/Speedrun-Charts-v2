@@ -18,6 +18,7 @@ const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 	categoryVariables,
 	configRef,
 }) => {
+	console.log(categoryVariables);
 	const [config, setConfig] = useState<{ [key: string]: string }>({});
 	useEffect(() => {
 		const assignDefaultsToConfig = () => {
