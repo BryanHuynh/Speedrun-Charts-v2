@@ -140,6 +140,13 @@ export const SpeedRunApiService = {
 		return data;
 	},
 
+	async fetchUsernameFromUserId(id: string): Promise<string> {
+		const res = await fetch(`https://www.speedrun.com/api/v1/users/${id}`);
+		if (!res.ok) throw Error("unable to fetch id for user");
+		const json = await res.json();
+		return json.data.names.international;
+	},
+
 	async fetchRuns(
 		gameId: string,
 		category: string,
@@ -148,7 +155,7 @@ export const SpeedRunApiService = {
 		const base = "https://www.speedrun.com/api/v1/runs";
 		let out: RunType[] = [];
 		const max_bulk = 200;
-		let uri = `${base}?game=${gameId}&category=${category}&orderby=date&direction=desc&max=${max_bulk}`;
+		let uri = `${base}?game=${gameId}&category=${category}&status=verified&orderby=date&direction=desc&max=${max_bulk}`;
 		for (;;) {
 			const res = await fetch(uri);
 			if (!res.ok) break;

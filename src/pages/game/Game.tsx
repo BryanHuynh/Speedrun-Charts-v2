@@ -7,6 +7,7 @@ import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 import type { CategoryVariablesType } from "../../services/DTO/category-variables";
 import CategoryVariablesSelection from "../../components/Category-Variables-Selection";
 import WRLineChart from "../../components/WR-Line-Chart";
+import type { RunsType } from "../../services/DTO/run-type";
 
 export default function Game() {
 	const { id } = useParams(); // extract `id` from the URL
@@ -15,6 +16,7 @@ export default function Game() {
 	const [platforms, setPlatforms] = useState<string[]>();
 	const [category, setCategory] = useState<string>();
 	const [categoryVariables, setCategoryVariables] = useState<CategoryVariablesType[]>([]);
+	const [runs, setRuns] = useState<RunsType>();
 	const variableAssignmentRef = useRef<{ [key: string]: string }>({});
 
 	useEffect(() => {
@@ -54,8 +56,10 @@ export default function Game() {
 	}, [category]);
 
 	const handleGenerate = () => {
-		if (!variableAssignmentRef.current) return;
-		console.log(variableAssignmentRef);
+		if (!variableAssignmentRef.current || !game || !category) return;
+		SpeedRunApiService.fetchRuns(game.id, category, variableAssignmentRef.current).then(
+			setRuns
+		);
 	};
 
 	return (
@@ -95,7 +99,7 @@ export default function Game() {
 					)}
 				</Paper>
 			)}
-			<WRLineChart />
+			{runs && <WRLineChart runs={runs} />}
 		</Box>
 	);
 }
