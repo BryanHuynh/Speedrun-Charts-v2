@@ -164,12 +164,27 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 						curve: "stepAfter",
 						strictStepCurve: true,
 						showMark: (p) => {
-							const pos = (p.position as unknown) as number | Date;
+							const pos = p.position as unknown as number | Date;
 							const ts = pos instanceof Date ? pos.getTime() : Number(pos);
 							return Boolean(wrMarks[key] && wrMarks[key].has(ts));
 						},
 						shape: "star",
-						valueFormatter: (v) => formatDurationSeconds(v as number),
+						valueFormatter: (v, { dataIndex }) => {
+							if (v == null) {
+								let value = null;
+								for (let i = dataIndex ?? 0; i >= 0; i--) {
+									const pt = points[i][key];
+									if (pt != null) {
+										value = points[i][key];
+										break;
+									}
+								}
+								if (value == null) return null;
+								return formatDurationSeconds(value as number);
+							}
+
+							return formatDurationSeconds(v as number) + "⬅️";
+						},
 					}))}
 					height={600}
 				/>
