@@ -138,6 +138,7 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 		return { xMin: new Date(minT), xMax: new Date(maxT), showYear: minY !== maxY } as const;
 	}, [runs]);
 
+	
 	return (
 		<Box>
 			{points.length > 0 && topPlayers.length > 0 && Object.keys(keyToLabel).length > 0 && (
@@ -187,7 +188,7 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 					}))}
 					height={600}
 				/>
-			)}
+			) } 
 		</Box>
 	);
 }
