@@ -3,6 +3,7 @@ import { LineChart } from "@mui/x-charts/LineChart";
 import type { RunsType } from "../services/DTO/run-type";
 import { Box } from "@mui/material";
 import { SpeedRunApiService } from "../services/Speedrun-api-service";
+import CircularProgress from '@mui/material/CircularProgress';
 
 type WRLineChartProps = {
 	runs: RunsType;
