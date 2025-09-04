@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import type { GamesType } from "../../services/DTO/games-type";
 import { SpeedRunApiService } from "../../services/Speedrun-api-service";
 import GameCategorySelection from "../../components/Game-Category-Selection";
-import { Box, Button, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import type { CategoryVariablesType } from "../../services/DTO/category-variables";
 import CategoryVariablesSelection from "../../components/Category-Variables-Selection";
 import WRLineChart from "../../components/WR-Line-Chart";
@@ -18,6 +18,7 @@ export default function Game() {
 	const [categoryVariables, setCategoryVariables] = useState<CategoryVariablesType[]>([]);
 	const [runs, setRuns] = useState<RunsType>();
 	const variableAssignmentRef = useRef<{ [key: string]: string }>({});
+	const [loading, setLoading] = useState<boolean>(false);
 
 	useEffect(() => {
 		async function fetchGame() {
@@ -57,9 +58,10 @@ export default function Game() {
 
 	const handleGenerate = () => {
 		if (!game || !category) return;
-		SpeedRunApiService.fetchRuns(game.id, category, variableAssignmentRef.current).then(
-			setRuns
-		);
+		setLoading(true);
+		SpeedRunApiService.fetchRuns(game.id, category, variableAssignmentRef.current)
+			.then(setRuns)
+			.then(() => setLoading(false));
 	};
 
 	return (
@@ -100,6 +102,19 @@ export default function Game() {
 						</Button>
 					)}
 				</Paper>
+			)}
+			{loading && <CircularProgress sx={{ mt: 5 }} />}
+			{runs && runs.run && runs.run.length == 0 && (
+				<Box
+					sx={{
+						height: 100,
+						alignContent: "center",
+					}}
+				>
+					<Typography variant="h4" component="h1">
+						There are no speedruns available for this category and or filter set
+					</Typography>
+				</Box>
 			)}
 			{runs && <WRLineChart runs={runs} />}
 		</Box>
