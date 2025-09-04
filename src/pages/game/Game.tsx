@@ -44,7 +44,7 @@ export default function Game() {
 
 	useEffect(() => {
 		setCategoryVariables([]);
-		console.log("category:", category);
+		setRuns(undefined);
 	}, [category]);
 
 	useEffect(() => {
@@ -58,6 +58,7 @@ export default function Game() {
 
 	const handleGenerate = () => {
 		if (!game || !category) return;
+		setRuns(undefined);
 		setLoading(true);
 		SpeedRunApiService.fetchRuns(game.id, category, variableAssignmentRef.current)
 			.then(setRuns)
