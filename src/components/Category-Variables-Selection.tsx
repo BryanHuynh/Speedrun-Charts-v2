@@ -18,7 +18,6 @@ const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 	categoryVariables,
 	configRef,
 }) => {
-	console.log(categoryVariables);
 	const [config, setConfig] = useState<{ [key: string]: string }>({});
 	useEffect(() => {
 		const assignDefaultsToConfig = () => {
@@ -65,13 +64,11 @@ const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 								value={config[categoryVariable.categoryId]}
 								onChange={(event) => handleChange(event, categoryVariable)}
 							>
-								{[{ id: "Any", name: "Any" }, ...categoryVariable.values].map(
-									(value) => (
-										<MenuItem key={value.id} value={value.id}>
-											{value.name}
-										</MenuItem>
-									)
-								)}
+								{categoryVariable.values.map((value) => (
+									<MenuItem key={value.id} value={value.id}>
+										{value.name}
+									</MenuItem>
+								))}
 							</Select>
 						)}
 					</FormControl>
