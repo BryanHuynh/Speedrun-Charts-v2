@@ -112,7 +112,7 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 				const k = [...run.player_ids].sort().join(" ");
 				if (!topPlayers.includes(k)) return null;
 				const row: Record<string, number | null | Date> = {
-					submitted_date: new Date(new Date(run.submitted_date)),
+					submitted_date: new Date(run.submitted_date),
 				};
 				for (const key of keyList) {
 					if (key == k) {
@@ -127,7 +127,6 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 		setPoints(_pts);
 	}, [topPlayers, runs]);
 
-	console.log(topPlayers, points, keyToLabel);
 
 	const { xMin, xMax, showYear } = React.useMemo(() => {
 		if (!runs.run.length) return { xMin: undefined, xMax: undefined, showYear: false } as const;

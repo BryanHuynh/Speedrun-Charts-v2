@@ -56,7 +56,7 @@ export default function Game() {
 	}, [category]);
 
 	const handleGenerate = () => {
-		if (!variableAssignmentRef.current || !game || !category) return;
+		if (!game || !category) return;
 		SpeedRunApiService.fetchRuns(game.id, category, variableAssignmentRef.current).then(
 			setRuns
 		);
@@ -92,10 +92,12 @@ export default function Game() {
 								categoryVariables={categoryVariables}
 								configRef={variableAssignmentRef}
 							/>
-							<Button variant="contained" onClick={handleGenerate}>
-								Generate Graph
-							</Button>
 						</Box>
+					)}
+					{category && (
+						<Button variant="contained" onClick={handleGenerate}>
+							Generate Graph
+						</Button>
 					)}
 				</Paper>
 			)}
