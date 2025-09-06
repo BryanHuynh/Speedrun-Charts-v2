@@ -26,12 +26,13 @@ function formatDateTick(value: Date | number, showYear: boolean): string {
 }
 
 export default function WRLineChart({ runs }: WRLineChartProps) {
-	const [topPlayers, setTopPlayers] = React.useState<string[]>([]);
+	const [topPlayersAndRuns, setTopPlayersAndRuns] =
+		React.useState<Record<string, { time: number; date: Date }[]>>();
 	const [keyToLabel, setKeyToLabel] = React.useState<Record<string, string>>({});
 	const [points, setPoints] = React.useState<Record<string, number | Date | null>[]>([]);
 	const [wrMarks, setWrMarks] = React.useState<Record<string, Set<number>>>({});
 	React.useEffect(() => {
-		const n = 3;
+		const n = 5;
 		if (!runs.run.length) return;
 
 		// 1) Chronological stream of runs
@@ -42,8 +43,8 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 		// collect the previous top N unique teams (by best time so far) and the new WR team.
 		// This yields a focused set of players to chart.
 		let wrBest = Number.POSITIVE_INFINITY;
-		const bestByTeam = new Map<string, number>(); // teamKey -> best time so far
-		const keepTeams = new Set<string>();
+		const bestByTeamRuns = new Map<string, { time: number; date: Date }>(); // teamKey -> best time so far
+		const keepTeamRuns: Record<string, { time: number; date: Date }[]> = {};
 		const wrByTeam = new Map<string, Set<number>>(); // teamKey -> set of WR break timestamps
 		for (const run of sorted) {
 			const t = run.times.realtime_t;
@@ -53,15 +54,34 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 			const isWRBreak = t < wrBest;
 			if (isWRBreak) {
 				// Snapshot previous top N teams before this new WR
-				if (bestByTeam.size > 0 && n > 0) {
-					const topN = [...bestByTeam.entries()]
-						.sort((a, b) => a[1] - b[1])
-						.slice(0, n)
-						.map(([key]) => key);
-					for (const k of topN) keepTeams.add(k);
-				}
+				const topN = [...bestByTeamRuns]
+					.map(([team, { time, date }]) => ({ team, time, date }))
+					.sort((a, b) => a.time - b.time)
+					.slice(0, n);
+				topN.forEach(({ team }) => {
+					const prev = bestByTeamRuns.get(team);
+					if (prev?.time && prev?.date) {
+						if (keepTeamRuns[team]) {
+							keepTeamRuns[team] = keepTeamRuns[team].concat({
+								time: prev.time,
+								date: new Date(prev.date),
+							});
+						} else {
+							keepTeamRuns[team] = [{ time: prev.time, date: new Date(prev.date) }];
+						}
+					}
+				});
+
 				// Include the WR team itself
-				keepTeams.add(teamKey);
+				if (keepTeamRuns[teamKey]) {
+					keepTeamRuns[teamKey] = keepTeamRuns[teamKey].concat({
+						time: t,
+						date: new Date(run.submitted_date),
+					});
+				} else {
+					keepTeamRuns[teamKey] = [{ time: t, date: new Date(run.submitted_date) }];
+				}
+
 				// Record the timestamp of this WR for marking on the chart
 				const ts = new Date(run.submitted_date).getTime();
 				if (!wrByTeam.has(teamKey)) wrByTeam.set(teamKey, new Set<number>());
@@ -70,21 +90,22 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 			}
 
 			// Update best time for this team
-			const prevBest = bestByTeam.get(teamKey);
-			if (prevBest === undefined || t < prevBest) bestByTeam.set(teamKey, t);
+			const prevBest = bestByTeamRuns.get(teamKey);
+			if (prevBest === undefined || t < prevBest.time)
+				bestByTeamRuns.set(teamKey, { time: t, date: new Date(run.submitted_date) });
 		}
-		setTopPlayers([...keepTeams]);
-		// Persist WR marks per team for use in showMark
+		setTopPlayersAndRuns(keepTeamRuns);
+		// // Persist WR marks per team for use in showMark
 		const wrObj: Record<string, Set<number>> = {};
 		for (const [k, v] of wrByTeam.entries()) wrObj[k] = v;
 		setWrMarks(wrObj);
 	}, [runs]);
 
 	React.useEffect(() => {
-		if (!topPlayers.length) return;
+		if (!topPlayersAndRuns) return;
 		const buildLabels = async () => {
 			const entries = await Promise.all(
-				topPlayers.map(async (teamKey) => {
+				Object.keys(topPlayersAndRuns).map(async (teamKey) => {
 					const ids = teamKey.split(" ").filter(Boolean);
 					const names = await Promise.all(
 						ids.map((id) => SpeedRunApiService.fetchUsernameFromUserId(id))
@@ -95,38 +116,25 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 			setKeyToLabel(Object.fromEntries(entries));
 		};
 		buildLabels();
-	}, [topPlayers]);
+	}, [topPlayersAndRuns]);
 
 	React.useEffect(() => {
-		if (!topPlayers.length) return;
-		const keys = new Set<string>();
-		for (const run of runs.run) keys.add([...run.player_ids].sort().join(" "));
-		const keyList = [...keys].sort().filter((key) => topPlayers.includes(key));
-
-		const _pts = [...runs.run]
-			.sort(
-				(a, b) =>
-					new Date(a.submitted_date).getTime() - new Date(b.submitted_date).getTime()
-			)
+		if (!topPlayersAndRuns) return;
+		const keyList = Object.keys(topPlayersAndRuns);
+		const _pts = Object.entries(topPlayersAndRuns)
+			.flatMap(([team, runsArr]) => runsArr.map(({ time, date }) => ({ team, time, date })))
+			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 			.map((run) => {
-				const k = [...run.player_ids].sort().join(" ");
-				if (!topPlayers.includes(k)) return null;
 				const row: Record<string, number | null | Date> = {
-					submitted_date: new Date(run.submitted_date),
+					submitted_date: new Date(run.date),
 				};
 				for (const key of keyList) {
-					if (key == k) {
-						row[key] = run.times.realtime_t;
-					} else {
-						row[key] = null;
-					}
+					row[key] = key === run.team ? run.time : null;
 				}
 				return row;
-			})
-			.filter((row) => row !== null);
+			});
 		setPoints(_pts);
-	}, [topPlayers, runs]);
-
+	}, [topPlayersAndRuns, runs]);
 
 	const { xMin, xMax, showYear } = React.useMemo(() => {
 		if (!runs.run.length) return { xMin: undefined, xMax: undefined, showYear: false } as const;
@@ -138,10 +146,9 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 		return { xMin: new Date(minT), xMax: new Date(maxT), showYear: minY !== maxY } as const;
 	}, [runs]);
 
-	
 	return (
 		<Box>
-			{points.length > 0 && topPlayers.length > 0 && Object.keys(keyToLabel).length > 0 && (
+			{points.length > 0 && topPlayersAndRuns && Object.keys(keyToLabel).length > 0 && (
 				<LineChart
 					dataset={points}
 					xAxis={[
@@ -188,7 +195,7 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 					}))}
 					height={600}
 				/>
-			) } 
+			)}
 		</Box>
 	);
 }
