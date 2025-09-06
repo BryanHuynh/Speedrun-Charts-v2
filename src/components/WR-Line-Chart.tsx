@@ -6,6 +6,7 @@ import { SpeedRunApiService } from "../services/Speedrun-api-service";
 
 type WRLineChartProps = {
 	runs: RunsType;
+	wrRunsOnly?: boolean;
 };
 
 function formatDurationSeconds(value?: number | null): string {
@@ -25,7 +26,7 @@ function formatDateTick(value: Date | number, showYear: boolean): string {
 	return showYear ? `${md} | ${d.getFullYear()}` : md;
 }
 
-export default function WRLineChart({ runs }: WRLineChartProps) {
+export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProps) {
 	const [topPlayers, setTopPlayers] = React.useState<string[]>([]);
 	const [keyToLabel, setKeyToLabel] = React.useState<Record<string, string>>({});
 	const [points, setPoints] = React.useState<Record<string, number | Date | null>[]>([]);
@@ -53,7 +54,7 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 			const isWRBreak = t < wrBest;
 			if (isWRBreak) {
 				// Snapshot previous top N teams before this new WR
-				if (bestByTeam.size > 0 && n > 0) {
+				if (!wrRunsOnly && bestByTeam.size > 0 && n > 0) {
 					const topN = [...bestByTeam.entries()]
 						.sort((a, b) => a[1] - b[1])
 						.slice(0, n)
@@ -74,6 +75,7 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 			if (prevBest === undefined || t < prevBest) bestByTeam.set(teamKey, t);
 		}
 		setTopPlayers([...keepTeams]);
+		console.log(topPlayers);
 		// Persist WR marks per team for use in showMark
 		const wrObj: Record<string, Set<number>> = {};
 		for (const [k, v] of wrByTeam.entries()) wrObj[k] = v;
@@ -116,7 +118,16 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 				};
 				for (const key of keyList) {
 					if (key == k) {
-						row[key] = run.times.realtime_t;
+						if (wrRunsOnly) {
+							if (
+								wrMarks[key] &&
+								wrMarks[key].has(new Date(run.submitted_date).getTime())
+							) {
+								row[key] = run.times.realtime_t;
+							}
+						} else {
+							row[key] = run.times.realtime_t;
+						}
 					} else {
 						row[key] = null;
 					}
@@ -126,7 +137,6 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 			.filter((row) => row !== null);
 		setPoints(_pts);
 	}, [topPlayers, runs]);
-
 
 	const { xMin, xMax, showYear } = React.useMemo(() => {
 		if (!runs.run.length) return { xMin: undefined, xMax: undefined, showYear: false } as const;
@@ -138,7 +148,6 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 		return { xMin: new Date(minT), xMax: new Date(maxT), showYear: minY !== maxY } as const;
 	}, [runs]);
 
-	
 	return (
 		<Box>
 			{points.length > 0 && topPlayers.length > 0 && Object.keys(keyToLabel).length > 0 && (
@@ -188,7 +197,7 @@ export default function WRLineChart({ runs }: WRLineChartProps) {
 					}))}
 					height={600}
 				/>
-			) } 
+			)}
 		</Box>
 	);
 }
