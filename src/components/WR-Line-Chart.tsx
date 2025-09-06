@@ -6,6 +6,7 @@ import { SpeedRunApiService } from "../services/Speedrun-api-service";
 
 type WRLineChartProps = {
 	runs: RunsType;
+	wrRunsOnly?: boolean;
 };
 
 function formatDurationSeconds(value?: number | null): string {
