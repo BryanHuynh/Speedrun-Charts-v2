@@ -3,7 +3,16 @@ import { useParams } from "react-router-dom";
 import type { GamesType } from "../../services/DTO/games-type";
 import { SpeedRunApiService } from "../../services/Speedrun-api-service";
 import GameCategorySelection from "../../components/Game-Category-Selection";
-import { Box, Button, CircularProgress, Paper, Stack, Typography } from "@mui/material";
+import {
+	Box,
+	Button,
+	CircularProgress,
+	FormControlLabel,
+	Paper,
+	Stack,
+	Switch,
+	Typography,
+} from "@mui/material";
 import type { CategoryVariablesType } from "../../services/DTO/category-variables";
 import CategoryVariablesSelection from "../../components/Category-Variables-Selection";
 import WRLineChart from "../../components/WR-Line-Chart";
@@ -20,6 +29,8 @@ export default function Game() {
 	const [runs, setRuns] = useState<RunsType>();
 	const variableAssignmentRef = useRef<{ [key: string]: string }>({});
 	const [loading, setLoading] = useState<boolean>(false);
+	const [wrRunsOnly, setWrRunsOnly] = useState<boolean>(false);
+	const [displayGraph, setDisplayGraph] = useState<boolean>(false);
 
 	useEffect(() => {
 		async function fetchGame() {
@@ -46,7 +57,12 @@ export default function Game() {
 	useEffect(() => {
 		setCategoryVariables([]);
 		setRuns(undefined);
+		setDisplayGraph(false);
 	}, [category]);
+
+	useEffect(() => {
+		setDisplayGraph(false);
+	}, [wrRunsOnly]);
 
 	useEffect(() => {
 		async function fetchCategoryVariables() {
@@ -63,7 +79,8 @@ export default function Game() {
 		setLoading(true);
 		SpeedRunApiService.fetchRuns(game.id, category, variableAssignmentRef.current)
 			.then(setRuns)
-			.then(() => setLoading(false));
+			.then(() => setLoading(false))
+			.then(() => setDisplayGraph(true));
 	};
 
 	return (
@@ -86,49 +103,51 @@ export default function Game() {
 								src={`https://www.speedrun.com/static/game/${id}/cover.jpg?v=${id}`}
 								alt={game.names.international}
 							/>
-							<Box textAlign="left">
-								<Typography variant="h6" fontWeight={600} gutterBottom>
-									{game.names.international}
-								</Typography>
-								<Typography variant="subtitle1">{game.released}</Typography>
-								<Typography variant="subtitle1">{platforms?.join(", ")}</Typography>
-							</Box>
-						</Stack>
-					</Paper>
-				)}
-				{game && (
-					<Paper variant="outlined" sx={{ p: 3 }}>
-						<GameCategorySelection gameId={game.id} onSelectCategory={setCategory} />
-						{categoryVariables.length > 0 && (
-							<Box>
-								<CategoryVariablesSelection
-									categoryVariables={categoryVariables}
-									configRef={variableAssignmentRef}
-								/>
-							</Box>
-						)}
-						{category && (
+						</Box>
+					)}
+
+					{category && (
+						<div>
+							<FormControlLabel
+								sx={{ display: "block" }}
+								label="Show WR runs only"
+								control={
+									<Switch
+										checked={wrRunsOnly}
+										onChange={() => setWrRunsOnly(!wrRunsOnly)}
+										name="WR runs only toggle"
+										color="primary"
+									/>
+								}
+							/>
 							<Button variant="contained" onClick={handleGenerate}>
 								Generate Graph
 							</Button>
-						)}
-					</Paper>
-				)}
-				{loading && <CircularProgress sx={{ mt: 5 }} />}
-				{runs && runs.run && runs.run.length == 0 && (
-					<Box
-						sx={{
-							height: 100,
-							alignContent: "center",
-						}}
-					>
-						<Typography variant="h4" component="h1">
-							There are no speedruns available for this category and or filter set
-						</Typography>
-					</Box>
-				)}
-				{runs && <WRLineChart runs={runs} />}
-			</Box>
-		</>
+						</div>
+					)}
+				</Paper>
+			)}
+			{loading && <CircularProgress sx={{ mt: 5 }} />}
+			{runs && runs.run && runs.run.length == 0 && (
+				<Box
+					sx={{
+						height: 100,
+						alignContent: "center",
+					}}
+				>
+					<Typography variant="h4" component="h1">
+						There are no speedruns available for this category and or filter set
+					</Typography>
+				</Box>
+			)}
+
+			{runs && displayGraph && (
+				<WRLineChart
+					runs={runs}
+					wrRunsOnly={wrRunsOnly}
+					releaseYear={parseInt(game?.released || "1950")}
+				/>
+			)}
+		</Box>
 	);
 }

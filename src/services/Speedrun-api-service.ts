@@ -144,7 +144,9 @@ export const SpeedRunApiService = {
 		const res = await fetch(`https://www.speedrun.com/api/v1/users/${id}`);
 		if (!res.ok) throw Error("unable to fetch id for user");
 		const json = await res.json();
-		return json.data.names.international;
+		return json.data.names.international
+			? json.data.names.international
+			: json.data.names.japanese;
 	},
 
 	async fetchRuns(
