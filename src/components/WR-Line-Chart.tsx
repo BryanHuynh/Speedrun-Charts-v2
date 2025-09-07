@@ -34,8 +34,9 @@ const seriesStrategy = {
 } as const;
 
 export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProps) {
-	const [topPlayersAndRuns, setTopPlayersAndRuns] =
-		React.useState<Record<string, { time: number; date: Date }[]>>({});
+	const [topPlayersAndRuns, setTopPlayersAndRuns] = React.useState<
+		Record<string, { time: number; date: Date }[]>
+	>({});
 	const [keyToLabel, setKeyToLabel] = React.useState<Record<string, string>>({});
 	const [points, setPoints] = React.useState<Record<string, number | Date | null>[]>([]);
 	const [wrMarks, setWrMarks] = React.useState<Record<string, Set<number>>>({});
@@ -58,6 +59,7 @@ export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProp
 			const t = run.times.realtime_t;
 			if (!Number.isFinite(t) || t == 0) continue;
 			const teamKey = [...run.player_ids].sort().join(" ");
+			if (teamKey == "") continue;
 
 			const isWRBreak = t < wrBest;
 			if (isWRBreak) {
