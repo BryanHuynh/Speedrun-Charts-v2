@@ -84,24 +84,37 @@ export default function Game() {
 	};
 
 	return (
-		<>
+		<Box>
 			{game && (
 				<RouteTitle title={`Speedrun Charts | ${game.names.international}`}></RouteTitle>
 			)}
-			<Box>
-				{game && (
-					<Paper variant="outlined" sx={{ p: 3, mb: 2 }}>
-						<Stack direction="row" spacing={2} alignItems="flex-start">
-							<Box
-								component="img"
-								sx={{
-									height: 192,
-									width: "auto",
-									borderRadius: 1,
-									objectFit: "cover",
-								}}
-								src={`https://www.speedrun.com/static/game/${id}/cover.jpg?v=${id}`}
-								alt={game.names.international}
+			{game && (
+				<Paper variant="outlined" sx={{ p: 3, mb: 2 }}>
+					<Stack direction="row" spacing={2} alignItems="flex-start">
+						<Box
+							component="img"
+							sx={{ height: 192, width: "auto", borderRadius: 1, objectFit: "cover" }}
+							src={`https://www.speedrun.com/static/game/${id}/cover.jpg?v=${id}`}
+							alt={game.names.international}
+						/>
+						<Box textAlign="left">
+							<Typography variant="h6" fontWeight={600} gutterBottom>
+								{game.names.international}
+							</Typography>
+							<Typography variant="subtitle1">{game.released}</Typography>
+							<Typography variant="subtitle1">{platforms?.join(", ")}</Typography>
+						</Box>
+					</Stack>
+				</Paper>
+			)}
+			{game && (
+				<Paper variant="outlined" sx={{ p: 3 }}>
+					<GameCategorySelection gameId={game.id} onSelectCategory={setCategory} />
+					{categoryVariables.length > 0 && (
+						<Box>
+							<CategoryVariablesSelection
+								categoryVariables={categoryVariables}
+								configRef={variableAssignmentRef}
 							/>
 						</Box>
 					)}
