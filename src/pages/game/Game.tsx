@@ -8,6 +8,7 @@ import type { CategoryVariablesType } from "../../services/DTO/category-variable
 import CategoryVariablesSelection from "../../components/Category-Variables-Selection";
 import WRLineChart from "../../components/WR-Line-Chart";
 import type { RunsType } from "../../services/DTO/run-type";
+import RouteTitle from "../../route-title";
 
 export default function Game() {
 	const { id } = useParams(); // extract `id` from the URL
@@ -66,58 +67,68 @@ export default function Game() {
 	};
 
 	return (
-		<Box>
+		<>
 			{game && (
-				<Paper variant="outlined" sx={{ p: 3, mb: 2 }}>
-					<Stack direction="row" spacing={2} alignItems="flex-start">
-						<Box
-							component="img"
-							sx={{ height: 192, width: "auto", borderRadius: 1, objectFit: "cover" }}
-							src={`https://www.speedrun.com/static/game/${id}/cover.jpg?v=${id}`}
-							alt={game.names.international}
-						/>
-						<Box textAlign="left">
-							<Typography variant="h6" fontWeight={600} gutterBottom>
-								{game.names.international}
-							</Typography>
-							<Typography variant="subtitle1">{game.released}</Typography>
-							<Typography variant="subtitle1">{platforms?.join(", ")}</Typography>
-						</Box>
-					</Stack>
-				</Paper>
+				<RouteTitle title={`Speedrun Charts | ${game.names.international}`}></RouteTitle>
 			)}
-			{game && (
-				<Paper variant="outlined" sx={{ p: 3 }}>
-					<GameCategorySelection gameId={game.id} onSelectCategory={setCategory} />
-					{categoryVariables.length > 0 && (
-						<Box>
-							<CategoryVariablesSelection
-								categoryVariables={categoryVariables}
-								configRef={variableAssignmentRef}
+			<Box>
+				{game && (
+					<Paper variant="outlined" sx={{ p: 3, mb: 2 }}>
+						<Stack direction="row" spacing={2} alignItems="flex-start">
+							<Box
+								component="img"
+								sx={{
+									height: 192,
+									width: "auto",
+									borderRadius: 1,
+									objectFit: "cover",
+								}}
+								src={`https://www.speedrun.com/static/game/${id}/cover.jpg?v=${id}`}
+								alt={game.names.international}
 							/>
-						</Box>
-					)}
-					{category && (
-						<Button variant="contained" onClick={handleGenerate}>
-							Generate Graph
-						</Button>
-					)}
-				</Paper>
-			)}
-			{loading && <CircularProgress sx={{ mt: 5 }} />}
-			{runs && runs.run && runs.run.length == 0 && (
-				<Box
-					sx={{
-						height: 100,
-						alignContent: "center",
-					}}
-				>
-					<Typography variant="h4" component="h1">
-						There are no speedruns available for this category and or filter set
-					</Typography>
-				</Box>
-			)}
-			{runs && <WRLineChart runs={runs} />}
-		</Box>
+							<Box textAlign="left">
+								<Typography variant="h6" fontWeight={600} gutterBottom>
+									{game.names.international}
+								</Typography>
+								<Typography variant="subtitle1">{game.released}</Typography>
+								<Typography variant="subtitle1">{platforms?.join(", ")}</Typography>
+							</Box>
+						</Stack>
+					</Paper>
+				)}
+				{game && (
+					<Paper variant="outlined" sx={{ p: 3 }}>
+						<GameCategorySelection gameId={game.id} onSelectCategory={setCategory} />
+						{categoryVariables.length > 0 && (
+							<Box>
+								<CategoryVariablesSelection
+									categoryVariables={categoryVariables}
+									configRef={variableAssignmentRef}
+								/>
+							</Box>
+						)}
+						{category && (
+							<Button variant="contained" onClick={handleGenerate}>
+								Generate Graph
+							</Button>
+						)}
+					</Paper>
+				)}
+				{loading && <CircularProgress sx={{ mt: 5 }} />}
+				{runs && runs.run && runs.run.length == 0 && (
+					<Box
+						sx={{
+							height: 100,
+							alignContent: "center",
+						}}
+					>
+						<Typography variant="h4" component="h1">
+							There are no speedruns available for this category and or filter set
+						</Typography>
+					</Box>
+				)}
+				{runs && <WRLineChart runs={runs} />}
+			</Box>
+		</>
 	);
 }

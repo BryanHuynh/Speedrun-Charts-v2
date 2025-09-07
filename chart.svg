@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title>Speedrun Timeline Chart Square Logo</title>
+  <desc>A square version of the speedrun chart logo with a rounded background.</desc>
+  <style>
+    :root { --accent: #fc3503; --bg: #111827; } /* fallback colors */
+    .axis, .line, .node { stroke: #fff; }
+    .axis, .line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="512" height="512" rx="60" ry="60" fill="var(--bg)" />
+
+  <!-- Axes (scaled to fit square) -->
+  <path class="axis" d="M120 80 L120 432 L432 432" stroke-width="20" />
+
+  <!-- Speedrun descending line (scaled) -->
+  <path class="line" d="M120 160 L200 240 L280 240 L360 320 L432 380" stroke-width="20" />
+
+  <!-- Milestone nodes -->
+  <circle class="node" cx="200" cy="240" r="25" fill="#fff" stroke="none"/>
+  <circle class="node" cx="280" cy="240" r="25" fill="#fff" stroke="none"/>
+  <circle class="node" cx="360" cy="320" r="25" fill="#fff" stroke="none"/>
+  <!-- Highlighted last node -->
+  <circle cx="432" cy="380" r="30" fill="var(--accent)" stroke="none"/>
+
+</svg>
