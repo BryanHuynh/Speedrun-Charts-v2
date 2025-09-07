@@ -26,9 +26,16 @@ function formatDateTick(value: Date | number, showYear: boolean): string {
 	return showYear ? `${md} | ${d.getFullYear()}` : md;
 }
 
+const seriesStrategy = {
+	connectNulls: true,
+	curve: "stepAfter" as const,
+	strictStepCurve: true,
+	shape: "star" as const,
+} as const;
+
 export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProps) {
 	const [topPlayersAndRuns, setTopPlayersAndRuns] =
-		React.useState<Record<string, { time: number; date: Date }[]>>();
+		React.useState<Record<string, { time: number; date: Date }[]>>({});
 	const [keyToLabel, setKeyToLabel] = React.useState<Record<string, string>>({});
 	const [points, setPoints] = React.useState<Record<string, number | Date | null>[]>([]);
 	const [wrMarks, setWrMarks] = React.useState<Record<string, Set<number>>>({});
@@ -143,7 +150,6 @@ export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProp
 
 				return row;
 			});
-		console.log(topPlayersAndRuns, _pts);
 		setPoints(_pts);
 	}, [topPlayersAndRuns, runs, wrRunsOnly]);
 
@@ -156,6 +162,38 @@ export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProp
 		const maxY = new Date(maxT).getFullYear();
 		return { xMin: new Date(minT), xMax: new Date(maxT), showYear: minY !== maxY } as const;
 	}, [runs]);
+
+	const valueFormatter = (v: number | null, dataIndex: number, key: string) => {
+		if (v == null) {
+			let value = null;
+			for (let i = dataIndex ?? 0; i >= 0; i--) {
+				const pt = points[i][key];
+				if (pt != null) {
+					value = points[i][key];
+					break;
+				}
+			}
+			if (value == null) return null;
+			return formatDurationSeconds(value as number);
+		}
+
+		return formatDurationSeconds(v as number) + "⬅️";
+	};
+
+	const wrValueFormatter = (v: number | null, dataIndex: number) => {
+		const date = new Date(points[dataIndex].submitted_date as Date).toString();
+		const team = Object.entries(topPlayersAndRuns)
+			.flatMap(([team, runsArr]) =>
+				runsArr.map(({ time, date }) => ({
+					team,
+					time,
+					date,
+				}))
+			)
+			.filter((team) => new Date(team.date).toString() == date);
+		const teamName = team[0] ? keyToLabel[team[0].team] : "";
+		return `${teamName}: ${formatDurationSeconds(v as number)} ⬅️`;
+	};
 
 	return (
 		<Box>
@@ -171,6 +209,7 @@ export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProp
 							domainLimit: "strict",
 							tickLabelPlacement: "middle",
 							tickNumber: 6,
+							valueFormatter: (v) => formatDateTick(v as Date | number, showYear),
 						},
 					]}
 					yAxis={[{ valueFormatter: (v: number) => formatDurationSeconds(v) }]}
@@ -180,63 +219,23 @@ export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProp
 									{
 										dataKey: "run",
 										label: "WR Break",
-										connectNulls: true,
-										curve: "stepAfter",
-										strictStepCurve: true,
-										shape: "star",
-										valueFormatter: (v, { dataIndex }) => {
-											const date = new Date(
-												points[dataIndex].submitted_date as Date
-											).toString();
-											const team = Object.entries(topPlayersAndRuns)
-												.flatMap(([team, runsArr]) =>
-													runsArr.map(({ time, date }) => ({
-														team,
-														time,
-														date,
-													}))
-												)
-												.filter(
-													(team) => new Date(team.date).toString() == date
-												);
-											const teamName = team[0]
-												? keyToLabel[team[0].team]
-												: "";
-											return `${teamName}: ${formatDurationSeconds(
-												v as number
-											)} ⬅️`;
-										},
+										valueFormatter: (v, { dataIndex }) =>
+											wrValueFormatter(v, dataIndex),
+										...seriesStrategy,
 									},
 							  ]
 							: Object.keys(keyToLabel).map((key) => ({
 									dataKey: key,
 									label: keyToLabel[key],
-									connectNulls: true,
-									curve: "stepAfter",
-									strictStepCurve: true,
 									showMark: (p) => {
 										const pos = p.position as unknown as number | Date;
 										const ts =
 											pos instanceof Date ? pos.getTime() : Number(pos);
 										return Boolean(wrMarks[key] && wrMarks[key].has(ts));
 									},
-									shape: "star",
-									valueFormatter: (v, { dataIndex }) => {
-										if (v == null) {
-											let value = null;
-											for (let i = dataIndex ?? 0; i >= 0; i--) {
-												const pt = points[i][key];
-												if (pt != null) {
-													value = points[i][key];
-													break;
-												}
-											}
-											if (value == null) return null;
-											return formatDurationSeconds(value as number);
-										}
-
-										return formatDurationSeconds(v as number) + "⬅️";
-									},
+									valueFormatter: (v, { dataIndex }) =>
+										valueFormatter(v, dataIndex, key),
+									...seriesStrategy,
 							  }))
 					}
 					height={600}
