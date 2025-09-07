@@ -31,7 +31,6 @@ const seriesStrategy = {
 	connectNulls: true,
 	curve: "stepAfter" as const,
 	strictStepCurve: true,
-	shape: "star" as const,
 } as const;
 
 export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WRLineChartProps) {
@@ -44,7 +43,6 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 	React.useEffect(() => {
 		const n = 5;
 		if (!runs.run.length) return;
-		console.log(releaseYear);
 
 		// 1) Chronological stream of runs
 		const sorted = [...runs.run]
@@ -164,9 +162,8 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 	const { xMin, xMax, showYear } = React.useMemo(() => {
 		if (!runs.run.length) return { xMin: undefined, xMax: undefined, showYear: false } as const;
 		const times = Object.entries(topPlayersAndRuns).flatMap(([_, runsArr]) =>
-			runsArr.map(({ time, date }) => date.valueOf())
+			runsArr.map(({ date }) => date.valueOf())
 		);
-		console.log(times);
 		const minT = Math.min(...times);
 		const maxT = Math.max(...times);
 		const minY = new Date(minT).getFullYear();
@@ -232,18 +229,15 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 										label: "WR Break",
 										valueFormatter: (v, { dataIndex }) =>
 											wrValueFormatter(v, dataIndex),
+										shape: "star",
 										...seriesStrategy,
 									},
 							  ]
 							: Object.keys(keyToLabel).map((key) => ({
 									dataKey: key,
 									label: keyToLabel[key],
-									showMark: (p) => {
-										const pos = p.position as unknown as number | Date;
-										const ts =
-											pos instanceof Date ? pos.getTime() : Number(pos);
-										return Boolean(wrMarks[key] && wrMarks[key].has(ts));
-									},
+									showMark: true,
+									shape: "circle",
 									valueFormatter: (v, { dataIndex }) =>
 										valueFormatter(v, dataIndex, key),
 									...seriesStrategy,
