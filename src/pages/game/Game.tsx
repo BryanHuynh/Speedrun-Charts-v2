@@ -150,7 +150,13 @@ export default function Game() {
 				</Box>
 			)}
 
-			{runs && displayGraph && <WRLineChart runs={runs} wrRunsOnly={wrRunsOnly} />}
+			{runs && displayGraph && (
+				<WRLineChart
+					runs={runs}
+					wrRunsOnly={wrRunsOnly}
+					releaseYear={parseInt(game?.released || "1950")}
+				/>
+			)}
 		</Box>
 	);
 }
