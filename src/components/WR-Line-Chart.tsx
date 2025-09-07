@@ -3,7 +3,6 @@ import { LineChart } from "@mui/x-charts/LineChart";
 import type { RunsType } from "../services/DTO/run-type";
 import { Box } from "@mui/material";
 import { SpeedRunApiService } from "../services/Speedrun-api-service";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
