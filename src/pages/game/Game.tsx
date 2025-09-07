@@ -17,6 +17,7 @@ import type { CategoryVariablesType } from "../../services/DTO/category-variable
 import CategoryVariablesSelection from "../../components/Category-Variables-Selection";
 import WRLineChart from "../../components/WR-Line-Chart";
 import type { RunsType } from "../../services/DTO/run-type";
+import RouteTitle from "../../route-title";
 
 export default function Game() {
 	const { id } = useParams(); // extract `id` from the URL
@@ -84,6 +85,9 @@ export default function Game() {
 
 	return (
 		<Box>
+			{game && (
+				<RouteTitle title={`Speedrun Charts | ${game.names.international}`}></RouteTitle>
+			)}
 			{game && (
 				<Paper variant="outlined" sx={{ p: 3, mb: 2 }}>
 					<Stack direction="row" spacing={2} alignItems="flex-start">
