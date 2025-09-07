@@ -15,7 +15,7 @@ function Home() {
 					component="img"
                     className="logo"
 					alt="speedrun charts logo"
-					src="../chart.svg"
+					src="/public/chart.svg"
 				/>
 				<Typography variant="h4" fontWeight={700} gutterBottom>
 					Welcome to Speedrun Charts!
