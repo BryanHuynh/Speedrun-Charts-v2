@@ -7,6 +7,7 @@ import { SpeedRunApiService } from "../services/Speedrun-api-service";
 type WRLineChartProps = {
 	runs: RunsType;
 	wrRunsOnly?: boolean;
+	releaseYear: number;
 };
 
 function formatDurationSeconds(value?: number | null): string {
@@ -33,7 +34,7 @@ const seriesStrategy = {
 	shape: "star" as const,
 } as const;
 
-export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProps) {
+export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WRLineChartProps) {
 	const [topPlayersAndRuns, setTopPlayersAndRuns] = React.useState<
 		Record<string, { time: number; date: Date }[]>
 	>({});
@@ -43,11 +44,16 @@ export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProp
 	React.useEffect(() => {
 		const n = 5;
 		if (!runs.run.length) return;
+		console.log(releaseYear);
 
 		// 1) Chronological stream of runs
-		const sorted = [...runs.run].sort(
-			(a, b) => new Date(a.submitted_date).getTime() - new Date(b.submitted_date).getTime()
-		);
+		const sorted = [...runs.run]
+			.sort(
+				(a, b) =>
+					new Date(a.submitted_date).getTime() - new Date(b.submitted_date).getTime()
+			)
+			.filter((run) => new Date(run.submitted_date).getFullYear() >= releaseYear);
+
 		// Find every time the world record has been broken and, for each such date,
 		// collect the previous top N unique teams (by best time so far) and the new WR team.
 		// This yields a focused set of players to chart.
@@ -157,13 +163,16 @@ export default function WRLineChart({ runs, wrRunsOnly = true }: WRLineChartProp
 
 	const { xMin, xMax, showYear } = React.useMemo(() => {
 		if (!runs.run.length) return { xMin: undefined, xMax: undefined, showYear: false } as const;
-		const times = runs.run.map((r) => new Date(r.submitted_date).getTime());
+		const times = Object.entries(topPlayersAndRuns).flatMap(([_, runsArr]) =>
+			runsArr.map(({ time, date }) => date.valueOf())
+		);
+		console.log(times);
 		const minT = Math.min(...times);
 		const maxT = Math.max(...times);
 		const minY = new Date(minT).getFullYear();
 		const maxY = new Date(maxT).getFullYear();
 		return { xMin: new Date(minT), xMax: new Date(maxT), showYear: minY !== maxY } as const;
-	}, [runs]);
+	}, [runs, topPlayersAndRuns]);
 
 	const valueFormatter = (v: number | null, dataIndex: number, key: string) => {
 		if (v == null) {
