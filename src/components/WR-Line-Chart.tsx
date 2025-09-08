@@ -178,7 +178,6 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 	const [yMax, setYMax] = React.useState<number>();
 
 	React.useEffect(() => {
-		console.log(xMin, xMax, viewMin, viewMax);
 		if ((!xMin && !xMax) || (!viewMin && !viewMax)) return;
 		const _xMin = viewMin ?? xMin;
 		const _xMax = viewMax ?? xMax;

@@ -25,6 +25,7 @@ type SrcCategoryVariables = {
 	id: string;
 	name: string;
 	category: string | null;
+	"is-subcategory": boolean;
 	scope: {
 		type: string;
 	};
@@ -120,23 +121,37 @@ export const SpeedRunApiService = {
 
 	async fetchCategoryVaiablesByCategoryId(id: string): Promise<CategoryVariablesType[]> {
 		const res = await fetch(`https://www.speedrun.com/api/v1/categories/${id}/variables`);
+		console.log("category id:", id);
 		const data: CategoryVariablesType[] = await res
 			.json()
 			.then((data) => data.data)
-			.then((data: SrcCategoryVariables[]) =>
-				data.filter((variable) => variable.category == id)
+			.then((data) =>
+				data.filter(
+					(variable: SrcCategoryVariables) =>
+						variable.category ||
+						variable.scope.type == "full-game" ||
+						(variable.category == null && !variable["is-subcategory"])
+				)
 			)
 			.then((data) => {
-				return data.map((variable) => ({
-					categoryId: variable.id,
-					name: variable.name,
-					default: variable.values.default,
-					values: Object.entries(variable.values.values).map(([id, obj]) => ({
-						id: id,
-						name: obj.label,
-					})),
-				}));
+				return data.map((variable: SrcCategoryVariables) => {
+					const isFilter = variable.category == null && !variable["is-subcategory"];
+
+					return {
+						categoryId: variable.id,
+						name: variable.name,
+						default: isFilter ? "" : variable.values.default,
+						isFilter,
+						values: isFilter
+							? [{ id: "", name: "Any" }]
+							: Object.keys(variable.values.values).map((id) => ({
+									id,
+									name: variable.values.values[id].label,
+							  })),
+					};
+				});
 			});
+		console.log(data);
 		return data;
 	},
 
@@ -168,7 +183,7 @@ export const SpeedRunApiService = {
 			data = data.filter((run) => {
 				const run_values = run.values;
 				return Object.keys(filters).reduce((prev, curr) => {
-					if (run_values[curr] != filters[curr]) return false;
+					if (filters[curr] && run_values[curr] != filters[curr]) return false;
 					return prev && true;
 				}, true);
 			});
