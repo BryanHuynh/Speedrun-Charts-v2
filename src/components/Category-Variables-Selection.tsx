@@ -1,5 +1,6 @@
 import {
 	Box,
+	Divider,
 	FormControl,
 	InputLabel,
 	MenuItem,
@@ -23,7 +24,7 @@ const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 		const assignDefaultsToConfig = () => {
 			const temp_config: { [key: string]: string } = {};
 			categoryVariables.forEach((variable) => {
-				temp_config[variable.categoryId] = variable.default;
+				temp_config[variable.categoryId] = variable.isFilter ? "" : variable.default;
 			});
 			setConfig(temp_config);
 		};
@@ -44,36 +45,80 @@ const CategoryVariablesSelection: React.FC<CategoryVariablesSelectionProps> = ({
 	};
 
 	return (
-		<Box sx={{ display: "flex", flexWrap: "wrap" }} gap={2}>
-			{categoryVariables.map((categoryVariable) => (
-				<Box key={categoryVariable.categoryId}>
-					<FormControl
-						fullWidth
-						sx={{ minWidth: "250px", width: "fit-content", marginBottom: 2 }}
-					>
-						<InputLabel
-							id={`Category-variable-select-label-${categoryVariable.categoryId}`}
-						>
-							{categoryVariable.name}
-						</InputLabel>
-						{Object.keys(config).length > 0 && (
-							<Select
-								labelId={`Category-variable-select-label-${categoryVariable.categoryId}`}
-								id={`variable-select-${categoryVariable.categoryId}`}
-								label={categoryVariable.name}
-								value={config[categoryVariable.categoryId]}
-								onChange={(event) => handleChange(event, categoryVariable)}
+		<Box sx={{ display: "flex", flexDirection: "column" }} gap={2}>
+			{/* Non-filter group */}
+			<Box sx={{ display: "flex", flexWrap: "wrap" }} gap={2}>
+				{categoryVariables
+					.filter((cv) => !cv.isFilter)
+					.map((categoryVariable) => (
+						<Box key={categoryVariable.categoryId}>
+							<FormControl
+								fullWidth
+								sx={{ minWidth: "250px", width: "fit-content", marginBottom: 2 }}
 							>
-								{categoryVariable.values.map((value) => (
-									<MenuItem key={value.id} value={value.id}>
-										{value.name}
-									</MenuItem>
-								))}
-							</Select>
-						)}
-					</FormControl>
-				</Box>
-			))}
+								<InputLabel
+									id={`Category-variable-select-label-${categoryVariable.categoryId}`}
+								>
+									{categoryVariable.name}
+								</InputLabel>
+								{Object.keys(config).length && (
+									<Select
+										labelId={`Category-variable-select-label-${categoryVariable.categoryId}`}
+										id={`variable-select-${categoryVariable.categoryId}`}
+										label={categoryVariable.name}
+										value={config[categoryVariable.categoryId]}
+										onChange={(event) => handleChange(event, categoryVariable)}
+									>
+										{categoryVariable.values.map((value) => (
+											<MenuItem key={value.id} value={value.id}>
+												{value.name}
+											</MenuItem>
+										))}
+									</Select>
+								)}
+							</FormControl>
+						</Box>
+					))}
+			</Box>
+
+			{/* Divider between groups if both exist */}
+			{categoryVariables.some((cv) => !cv.isFilter) &&
+				categoryVariables.some((cv) => cv.isFilter) && <Divider />}
+
+			{/* Filter group */}
+			<Box sx={{ display: "flex", flexWrap: "wrap" }} gap={2}>
+				{categoryVariables
+					.filter((cv) => cv.isFilter)
+					.map((categoryVariable) => (
+						<Box key={categoryVariable.categoryId}>
+							<FormControl
+								fullWidth
+								sx={{ minWidth: "250px", width: "fit-content", marginBottom: 2 }}
+							>
+								<InputLabel
+									id={`Category-variable-select-label-${categoryVariable.categoryId}`}
+								>
+									{categoryVariable.name}
+								</InputLabel>
+								{Object.keys(config).length && (
+									<Select
+										labelId={`Category-variable-select-label-${categoryVariable.categoryId}`}
+										id={`variable-select-${categoryVariable.categoryId}`}
+										label={categoryVariable.name}
+										value={config[categoryVariable.categoryId]}
+										onChange={(event) => handleChange(event, categoryVariable)}
+									>
+										{categoryVariable.values.map((value) => (
+											<MenuItem key={value.id} value={value.id}>
+												{value.name}
+											</MenuItem>
+										))}
+									</Select>
+								)}
+							</FormControl>
+						</Box>
+					))}
+			</Box>
 		</Box>
 	);
 };
