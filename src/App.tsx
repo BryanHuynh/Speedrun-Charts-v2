@@ -3,15 +3,38 @@ import "./App.css";
 import Home from "./pages/home/Home";
 import GameSelectionPage from "./pages/gameSelection/GameSelectionPage";
 import Game from "./pages/game/Game";
-import { AppBar, Toolbar, Container, Link, Stack } from "@mui/material";
+import {
+	AppBar,
+	Toolbar,
+	Container,
+	Link,
+	Stack,
+	createTheme,
+	ThemeProvider,
+	CssBaseline,
+	IconButton,
+} from "@mui/material";
 import RouteTitle from "./route-title";
+import { LightMode, DarkMode } from "@mui/icons-material";
+import { useMemo, useState } from "react";
 
 function App() {
+	const [mode, setMode] = useState<"light" | "dark">("dark");
+
+	const theme = useMemo(
+		() =>
+			createTheme({
+				palette: { mode },
+			}),
+		[mode]
+	);
+
 	return (
-		<div>
-			<AppBar position="static" color="default" elevation={1}>
+		<ThemeProvider theme={theme}>
+			<CssBaseline />
+			<AppBar position="static" elevation={1}>
 				<Toolbar>
-					<Container maxWidth="lg" sx={{ px: 0 }}>
+					<Container maxWidth="xl" sx={{ px: 0 }}>
 						<Stack
 							direction="row"
 							spacing={3}
@@ -21,7 +44,7 @@ function App() {
 							<Link
 								component={RouterLink}
 								to="/"
-								color="primary.main"
+								color="common.white"
 								underline="hover"
 							>
 								Home
@@ -29,13 +52,16 @@ function App() {
 							<Link
 								component={RouterLink}
 								to="/game"
-								color="primary.main"
+								color="common.white"
 								underline="hover"
 							>
 								Games
 							</Link>
 						</Stack>
 					</Container>
+					<IconButton onClick={() => setMode((m) => (m === "light" ? "dark" : "light"))}>
+						{mode === "light" ? <DarkMode /> : <LightMode />}
+					</IconButton>
 				</Toolbar>
 			</AppBar>
 
@@ -54,7 +80,7 @@ function App() {
 					<Route path="/game/:id" element={<Game />} />
 				</Routes>
 			</Container>
-		</div>
+		</ThemeProvider>
 	);
 }
 
