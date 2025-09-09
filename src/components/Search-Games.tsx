@@ -14,6 +14,7 @@ export function SearchGames({ setGames }: SearchGamesProps) {
 			const res = await SpeedRunApiService.fetchGamesByName(name);
 			setGames(res);
 		}
+        if(!searchTerm) return
 		searchGame(searchTerm);
 	}, [searchTerm]);
     return (
