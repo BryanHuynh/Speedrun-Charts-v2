@@ -49,7 +49,7 @@ type srcRunsData = {
 		id: string;
 		uri: string;
 	}[];
-	submitted: string;
+	date: string;
 	times: {
 		primary: string | null;
 		primary_t: number;
@@ -121,7 +121,6 @@ export const SpeedRunApiService = {
 
 	async fetchCategoryVaiablesByCategoryId(id: string): Promise<CategoryVariablesType[]> {
 		const res = await fetch(`https://www.speedrun.com/api/v1/categories/${id}/variables`);
-		console.log("category id:", id);
 		const data: CategoryVariablesType[] = await res
 			.json()
 			.then((data) => data.data)
@@ -151,7 +150,6 @@ export const SpeedRunApiService = {
 					};
 				});
 			});
-		console.log(data);
 		return data;
 	},
 
@@ -189,7 +187,7 @@ export const SpeedRunApiService = {
 			});
 			const _data = data.map((run) => ({
 				id: run.id,
-				submitted_date: run.submitted,
+				date: run.date,
 				player_ids: run.players.map((player) => player.id),
 				times: {
 					primary: run.times.primary,

@@ -50,9 +50,9 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 		const sorted = [...runs.run]
 			.sort(
 				(a, b) =>
-					new Date(a.submitted_date).getTime() - new Date(b.submitted_date).getTime()
+					new Date(a.date).getTime() - new Date(b.date).getTime()
 			)
-			.filter((run) => new Date(run.submitted_date).getFullYear() >= releaseYear);
+			.filter((run) => new Date(run.date).getFullYear() >= releaseYear);
 
 		// Find every time the world record has been broken and, for each such date,
 		// collect the previous top N unique teams (by best time so far) and the new WR team.
@@ -96,14 +96,14 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 				if (keepTeamRuns[teamKey]) {
 					keepTeamRuns[teamKey] = keepTeamRuns[teamKey].concat({
 						time: t,
-						date: new Date(run.submitted_date),
+						date: new Date(run.date),
 					});
 				} else {
-					keepTeamRuns[teamKey] = [{ time: t, date: new Date(run.submitted_date) }];
+					keepTeamRuns[teamKey] = [{ time: t, date: new Date(run.date) }];
 				}
 
 				// Record the timestamp of this WR for marking on the chart
-				const ts = new Date(run.submitted_date).getTime();
+				const ts = new Date(run.date).getTime();
 				if (!wrByTeam.has(teamKey)) wrByTeam.set(teamKey, new Set<number>());
 				wrByTeam.get(teamKey)!.add(ts);
 				wrBest = t;
@@ -112,7 +112,7 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 			// Update best time for this team
 			const prevBest = bestByTeamRuns.get(teamKey);
 			if (prevBest === undefined || t < prevBest.time)
-				bestByTeamRuns.set(teamKey, { time: t, date: new Date(run.submitted_date) });
+				bestByTeamRuns.set(teamKey, { time: t, date: new Date(run.date) });
 		}
 		setTopPlayersAndRuns(keepTeamRuns);
 		// // Persist WR marks per team for use in showMark

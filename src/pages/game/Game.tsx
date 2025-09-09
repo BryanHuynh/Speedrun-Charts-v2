@@ -77,7 +77,6 @@ export default function Game() {
 		if (!game || !category) return;
 		setRuns(undefined);
 		setLoading(true);
-		console.log(variableAssignmentRef.current);
 		SpeedRunApiService.fetchRuns(game.id, category, variableAssignmentRef.current)
 			.then(setRuns)
 			.then(() => setLoading(false))
