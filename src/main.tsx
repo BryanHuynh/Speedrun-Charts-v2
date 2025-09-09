@@ -5,15 +5,14 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
-const theme = createTheme({});
+const theme = createTheme({
+	palette: { mode: "dark", primary: { main: "#7c3aed" }, secondary: { main: "#06b6d4" } },
+});
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
-		<ThemeProvider theme={theme}>
-			<CssBaseline />
-			<BrowserRouter>
-				<App />
-			</BrowserRouter>
-		</ThemeProvider>
+		<BrowserRouter>
+			<App />
+		</BrowserRouter>
 	</StrictMode>
 );
