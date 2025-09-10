@@ -50,6 +50,7 @@ type srcRunsData = {
 		uri: string;
 	}[];
 	date: string;
+	submitted: string;
 	times: {
 		primary: string | null;
 		primary_t: number;
@@ -193,6 +194,7 @@ export const SpeedRunApiService = {
 			const _data = data.map((run) => ({
 				id: run.id,
 				date: run.date,
+				submitted: run.submitted,
 				player_ids: run.players.map((player) => player.id),
 				times: {
 					primary: run.times.primary,

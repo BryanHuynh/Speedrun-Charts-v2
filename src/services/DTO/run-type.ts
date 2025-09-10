@@ -7,6 +7,7 @@ export type RunsType = {
 export type RunType = {
 	id: string;
 	date: string;
+	submitted: string;
 	player_ids: string[];
 	times: {
 		primary: string | null;
