@@ -39,7 +39,7 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 		// 1) Chronological stream of runs
 		const sorted = [...runs.run]
 			.sort((a, b) => new Date(a.submitted).getTime() - new Date(b.submitted).getTime())
-			.filter((run) => new Date(run.date).getFullYear() >= releaseYear);
+			.filter((run) => new Date(run.submitted).getFullYear() >= releaseYear);
 
 		// Find every time the world record has been broken and, for each such date,
 		// collect the previous top N unique teams (by best time so far) and the new WR team.
