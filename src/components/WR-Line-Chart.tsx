@@ -1,11 +1,9 @@
 import * as React from "react";
-import { LineChart } from "@mui/x-charts/LineChart";
+import Plot from "react-plotly.js";
+import type { Data } from "plotly.js";
 import type { RunsType } from "../services/DTO/run-type";
-import { Box } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { SpeedRunApiService } from "../services/Speedrun-api-service";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
 
 type WRLineChartProps = {
 	runs: RunsType;
@@ -24,34 +22,23 @@ function formatDurationSeconds(value?: number | null): string {
 	return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function formatDateTick(value: Date | number, showYear: boolean): string {
-	const d = value instanceof Date ? value : new Date(value);
-	const md = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(d);
-	return showYear ? `${md} | ${d.getFullYear()}` : md;
-}
-
-const seriesStrategy = {
-	connectNulls: true,
-	curve: "stepAfter" as const,
-	strictStepCurve: true,
-} as const;
-
 export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WRLineChartProps) {
 	const [topPlayersAndRuns, setTopPlayersAndRuns] = React.useState<
 		Record<string, { time: number; date: Date }[]>
 	>({});
+	const [playersWRProgression, setPlayersWRProgression] =
+		React.useState<Record<string, Set<number>>>();
+
+	const theme = useTheme().palette.mode;
+
 	const [keyToLabel, setKeyToLabel] = React.useState<Record<string, string>>({});
-	const [points, setPoints] = React.useState<Record<string, number | Date | null>[]>([]);
 	React.useEffect(() => {
 		const n = 5;
 		if (!runs.run.length) return;
 
 		// 1) Chronological stream of runs
 		const sorted = [...runs.run]
-			.sort(
-				(a, b) =>
-					new Date(a.date).getTime() - new Date(b.date).getTime()
-			)
+			.sort((a, b) => new Date(a.submitted).getTime() - new Date(b.submitted).getTime())
 			.filter((run) => new Date(run.date).getFullYear() >= releaseYear);
 
 		// Find every time the world record has been broken and, for each such date,
@@ -96,29 +83,30 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 				if (keepTeamRuns[teamKey]) {
 					keepTeamRuns[teamKey] = keepTeamRuns[teamKey].concat({
 						time: t,
-						date: new Date(run.date),
+						date: new Date(run.submitted),
 					});
 				} else {
-					keepTeamRuns[teamKey] = [{ time: t, date: new Date(run.date) }];
+					keepTeamRuns[teamKey] = [{ time: t, date: new Date(run.submitted) }];
 				}
 
 				// Record the timestamp of this WR for marking on the chart
-				const ts = new Date(run.date).getTime();
+				const ts = new Date(run.submitted);
 				if (!wrByTeam.has(teamKey)) wrByTeam.set(teamKey, new Set<number>());
-				wrByTeam.get(teamKey)!.add(ts);
+				wrByTeam.get(teamKey)!.add(+ts);
 				wrBest = t;
 			}
 
 			// Update best time for this team
 			const prevBest = bestByTeamRuns.get(teamKey);
 			if (prevBest === undefined || t < prevBest.time)
-				bestByTeamRuns.set(teamKey, { time: t, date: new Date(run.date) });
+				bestByTeamRuns.set(teamKey, { time: t, date: new Date(run.submitted) });
 		}
 		setTopPlayersAndRuns(keepTeamRuns);
 		// // Persist WR marks per team for use in showMark
 		const wrObj: Record<string, Set<number>> = {};
 		for (const [k, v] of wrByTeam.entries()) wrObj[k] = v;
-	}, [runs]);
+		setPlayersWRProgression(wrObj);
+	}, [releaseYear, runs, wrRunsOnly]);
 
 	React.useEffect(() => {
 		if (!topPlayersAndRuns) return;
@@ -137,15 +125,15 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 		buildLabels();
 	}, [topPlayersAndRuns]);
 
-	React.useEffect(() => {
+	const points = React.useMemo(() => {
 		if (!topPlayersAndRuns) return;
 		const keyList = Object.keys(topPlayersAndRuns);
-		const _pts = Object.entries(topPlayersAndRuns)
+		return Object.entries(topPlayersAndRuns)
 			.flatMap(([team, runsArr]) => runsArr.map(({ time, date }) => ({ team, time, date })))
 			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 			.map((run) => {
 				const row: Record<string, number | null | Date> = {
-					submitted_date: new Date(run.date),
+					date: new Date(run.date),
 				};
 				if (wrRunsOnly) {
 					row["run"] = run.time;
@@ -157,142 +145,185 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 
 				return row;
 			});
-		setPoints(_pts);
-	}, [topPlayersAndRuns, runs, wrRunsOnly]);
+	}, [topPlayersAndRuns, wrRunsOnly]);
 
-	const { xMin, xMax, showYear } = React.useMemo(() => {
-		if (!runs.run.length) return { xMin: undefined, xMax: undefined, showYear: false } as const;
+	const { yTicks, yTicksFormated } = React.useMemo(() => {
+		if (!runs.run.length) return { yTicks: undefined, yTicksFormated: undefined };
 		const times = Object.values(topPlayersAndRuns).flatMap((runsArr) =>
-			runsArr.map(({ date }) => date.valueOf())
+			runsArr.map(({ time }) => time.valueOf())
 		);
+
 		const minT = Math.min(...times);
 		const maxT = Math.max(...times);
-		const minY = new Date(minT).getFullYear();
-		const maxY = new Date(maxT).getFullYear();
-		return { xMin: new Date(minT), xMax: new Date(maxT), showYear: minY !== maxY } as const;
-	}, [runs, topPlayersAndRuns]);
 
-	const [viewMin, setViewMin] = React.useState<Date | null>(null);
-	const [viewMax, setViewMax] = React.useState<Date | null>(null);
-	const [yMin, setYMin] = React.useState<number>();
-	const [yMax, setYMax] = React.useState<number>();
+		const nTicks = 7;
+		const offset = Math.ceil((maxT - minT) / nTicks);
+		const ticks = [minT];
+		const ticksFormatted = [formatDurationSeconds(minT)];
+		let sum = minT || 0;
+		for (let i = minT; i <= maxT; i++) {
+			sum += offset;
+			ticks.push(sum);
+			ticksFormatted.push(formatDurationSeconds(sum));
+		}
+		return { yTicks: ticks, yTicksFormated: ticksFormatted };
+	}, [runs.run.length, topPlayersAndRuns]);
 
-	React.useEffect(() => {
-		if ((!xMin && !xMax) || (!viewMin && !viewMax)) return;
-		const _xMin = viewMin ?? xMin;
-		const _xMax = viewMax ?? xMax;
-		const times = Object.values(topPlayersAndRuns).flatMap((runsArr) =>
-			runsArr.filter((run) => run.date >= _xMin && run.date <= _xMax).map((run) => run.time)
-		);
-		setYMin(Math.min(...times));
-		setYMax(Math.max(...times));
-	}, [xMin, xMax, viewMin, viewMax]);
+	// Build Plotly traces from dataset
+	const plotX = React.useMemo(() => (points ? points.map((p) => p.date as Date) : []), [points]);
 
-	const valueFormatter = (v: number | null, dataIndex: number, key: string) => {
-		if (v == null) {
-			let value = null;
-			for (let i = dataIndex ?? 0; i >= 0; i--) {
-				const pt = points[i][key];
-				if (pt != null) {
-					value = points[i][key];
-					break;
+	const dateLabelMap = React.useMemo(() => {
+		// Map each WR date to the team label for hover text
+		const map = new Map<string, string>();
+		Object.entries(topPlayersAndRuns).forEach(([teamKey, arr]) => {
+			const label = keyToLabel[teamKey] ?? teamKey;
+			arr.forEach(({ date }) => {
+				map.set(new Date(date).toString(), label);
+			});
+		});
+		return map;
+	}, [topPlayersAndRuns, keyToLabel]);
+
+	const playerWRProgressionMarkers = React.useMemo<Record<string, null | Date | string>[]>(() => {
+		const keyList = Object.keys(topPlayersAndRuns);
+		return Object.entries(topPlayersAndRuns)
+			.flatMap(([team, runsArr]) => runsArr.map(({ time, date }) => ({ team, time, date })))
+			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+			.map((run) => {
+				const row: Record<string, null | Date | string> = {
+					date: run.date,
+				};
+				if (wrRunsOnly) {
+					row["run"] = "star";
+				} else {
+					for (const key of keyList) {
+						row[key] =
+							key == run.team &&
+							playersWRProgression &&
+							playersWRProgression[key] &&
+							playersWRProgression[key].has(+run.date)
+								? "star"
+								: "circle";
+					}
 				}
-			}
-			if (value == null) return null;
-			return formatDurationSeconds(value as number);
+
+				return row;
+			});
+	}, [topPlayersAndRuns, wrRunsOnly, playersWRProgression]);
+
+	const traces = React.useMemo<Data[]>(() => {
+		if (!points) return [];
+		const common = {
+			mode: "lines+markers",
+			connectgaps: true,
+			line: { shape: "hv" }, // step-after style
+		};
+
+		if (wrRunsOnly) {
+			const y = points.map((p) => (p["run"] as number) ?? null);
+			const text = points.map((p, i) => {
+				const d = (p.date as Date).toString();
+				const lbl = dateLabelMap.get(d) ?? "WR Break";
+				const val = y[i];
+				return val == null ? "" : `${lbl}: ${formatDurationSeconds(val)}`;
+			});
+			return [
+				{
+					x: plotX,
+					y,
+					text,
+					type: "scatter",
+					name: "WR Break",
+					marker: { symbol: "star", size: 16 },
+					...common,
+					hovertemplate: "%{text}<br>%{x}",
+				} as Data,
+			];
 		}
 
-		return formatDurationSeconds(v as number) + "⬅️";
-	};
+		// Per-team traces
+		return Object.keys(keyToLabel).map((key) => {
+			const y = points.map((p) => p[key] as number);
+			const markers = playerWRProgressionMarkers.map((p) => p[key]);
+			const markerSizes = playerWRProgressionMarkers.map((p) => (p[key] == "star" ? 12 : 8));
+			const text = y.map((v) =>
+				v == null ? "" : `${keyToLabel[key]}: ${formatDurationSeconds(v)}`
+			);
+			return {
+				x: plotX,
+				y: y,
+				text,
+				type: "scatter",
+				name: keyToLabel[key],
+				marker: { symbol: markers, size: markerSizes },
+				...common,
+				hovertemplate: "%{text}<br>%{x}",
+			} as Data;
+		});
+	}, [points, wrRunsOnly, keyToLabel, plotX, dateLabelMap, playerWRProgressionMarkers]);
 
-	const wrValueFormatter = (v: number | null, dataIndex: number) => {
-		const date = new Date(points[dataIndex].submitted_date as Date).toString();
-		const team = Object.entries(topPlayersAndRuns)
-			.flatMap(([team, runsArr]) =>
-				runsArr.map(({ time, date }) => ({
-					team,
-					time,
-					date,
-				}))
-			)
-			.filter((team) => new Date(team.date).toString() == date);
-		const teamName = team[0] ? keyToLabel[team[0].team] : "";
-		return `${teamName}: ${formatDurationSeconds(v as number)} ⬅️`;
-	};
+	const graphColorPallet = React.useMemo(
+		() =>
+			theme == "dark"
+				? {
+						paper_bgcolor: "#1e1e1e",
+						plot_bgcolor: "#1e1e1e",
+						font: "#f0f0f0",
+						axis_grid: "#444",
+						axis_zeroline: "#666",
+				  }
+				: {
+						paper_bgcolor: "#ffffffff",
+						plot_bgcolor: "#ffffffff",
+						font: "#1e1e1e",
+						axis_grid: "#cfd8dc",
+						axis_zeroline: "#cfd8dc",
+				  },
+		[theme]
+	);
+	const layout = React.useMemo<Partial<Plotly.Layout>>(
+		() => ({
+			height: 600,
+			dragmode: "pan",
+			margin: { l: 60, r: 20, t: 20, b: 50 },
+			paper_bgcolor: graphColorPallet.plot_bgcolor,
+			plot_bgcolor: graphColorPallet.paper_bgcolor,
+			font: { color: graphColorPallet.font },
+			xaxis: {
+				gridcolor: graphColorPallet.axis_grid,
+				zerolinecolor: graphColorPallet.axis_zeroline,
+				autorange: true,
+				type: "date",
+				tickmode: "array",
+				nticks: 6,
+			},
+			yaxis: {
+				gridcolor: graphColorPallet.axis_grid,
+				zerolinecolor: graphColorPallet.axis_zeroline,
+				autorange: true,
+				tickmode: "array",
+				tickvals: yTicks,
+				ticktext: yTicksFormated,
+			},
+			showlegend: true,
+		}),
+		[yTicks, yTicksFormated]
+	);
 
 	return (
 		<Box>
-			{points.length > 0 && topPlayersAndRuns && Object.keys(keyToLabel).length > 0 && (
+			{points && topPlayersAndRuns && Object.keys(keyToLabel).length > 0 && (
 				<div>
-					<LineChart
-						dataset={points}
-						xAxis={[
-							{
-								scaleType: "time",
-								dataKey: "submitted_date",
-								min: viewMin ?? xMin,
-								max: viewMax ?? xMax,
-								domainLimit: "strict",
-								tickLabelPlacement: "middle",
-								tickNumber: 6,
-								valueFormatter: (v) => formatDateTick(v as Date | number, showYear),
-							},
-						]}
-						yAxis={[
-							{
-								valueFormatter: (v: number) => formatDurationSeconds(v),
-								min: yMin,
-								max: yMax,
-							},
-						]}
-						series={
-							wrRunsOnly
-								? [
-										{
-											dataKey: "run",
-											label: "WR Break",
-											valueFormatter: (v, { dataIndex }) =>
-												wrValueFormatter(v, dataIndex),
-											shape: "star",
-											...seriesStrategy,
-										},
-								  ]
-								: Object.keys(keyToLabel).map((key) => ({
-										dataKey: key,
-										label: keyToLabel[key],
-										shape: "circle",
-										valueFormatter: (v, { dataIndex }) =>
-											valueFormatter(v, dataIndex, key),
-										...seriesStrategy,
-								  }))
-						}
-						height={600}
+					<Plot
+						data={traces}
+						layout={layout}
+						useResizeHandler
+						style={{ width: "100%", height: 600 }}
+						config={{
+							scrollZoom: true,
+							displayModeBar: "hover",
+						}}
 					/>
-
-					<LocalizationProvider dateAdapter={AdapterDayjs}>
-						<Box display="flex" flexDirection="row" justifyContent={"space-around"}>
-							<DatePicker
-								label="From Date"
-								value={dayjs(viewMin ?? xMin)}
-								minDate={dayjs(xMin)}
-								maxDate={dayjs(viewMax ?? xMax)}
-								onChange={(val) => {
-									if (!val) return;
-									setViewMin(val.toDate());
-								}}
-							/>
-							<DatePicker
-								label="To Date"
-								value={dayjs(viewMax ?? xMax)}
-								minDate={dayjs(viewMin ?? xMin)}
-								maxDate={dayjs(xMax)}
-								onChange={(val) => {
-									if (!val) return;
-									setViewMax(val.toDate());
-								}}
-							/>
-						</Box>
-					</LocalizationProvider>
 				</div>
 			)}
 		</Box>
