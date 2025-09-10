@@ -76,7 +76,7 @@ type srcPagination = {
 export const SpeedRunApiService = {
 	async fetchGames(size: number = 50): Promise<GamesRequest> {
 		const res = await fetch(
-			`https://www.speedrun.com/api/v1/games?&max=20&orderby=released&direction=desc`
+			`https://www.speedrun.com/api/v1/games?&max=${size}&orderby=released&direction=desc`
 		);
 		const data = await res.json();
 		const { prev, next } = mapPagination(data);
