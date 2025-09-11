@@ -103,7 +103,7 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 			if (prevBest === undefined || t < prevBest.time)
 				bestByTeamRuns.set(teamKey, { time: t, date: new Date(run.submitted) });
 		}
-		// setTopPlayersAndRuns(keepTeamRuns);
+
 		const savedTeamNames = Object.keys(keepTeamRuns);
 		for(const run of sorted) {
 			const teamKey = [...run.player_ids].sort().join(" ");
