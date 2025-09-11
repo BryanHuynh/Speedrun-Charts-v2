@@ -32,6 +32,8 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 	const theme = useTheme().palette.mode;
 
 	const [keyToLabel, setKeyToLabel] = React.useState<Record<string, string>>({});
+
+
 	React.useEffect(() => {
 		const n = 5;
 		if (!runs.run.length) return;
@@ -101,7 +103,22 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 			if (prevBest === undefined || t < prevBest.time)
 				bestByTeamRuns.set(teamKey, { time: t, date: new Date(run.submitted) });
 		}
+		// setTopPlayersAndRuns(keepTeamRuns);
+		const savedTeamNames = Object.keys(keepTeamRuns);
+		console.log(keepTeamRuns);
+
+		for(const run of sorted) {
+			const teamKey = [...run.player_ids].sort().join(" ");
+			if(savedTeamNames.includes(teamKey)) {
+				const runData = { time: run.times.realtime_t, date: new Date(run.submitted) };
+				if(keepTeamRuns[teamKey] && keepTeamRuns[teamKey].includes(runData)) {
+					keepTeamRuns[teamKey].concat(runData);
+				}
+			}
+		}
+
 		setTopPlayersAndRuns(keepTeamRuns);
+
 		// // Persist WR marks per team for use in showMark
 		const wrObj: Record<string, Set<number>> = {};
 		for (const [k, v] of wrByTeam.entries()) wrObj[k] = v;
