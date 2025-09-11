@@ -105,8 +105,6 @@ export default function WRLineChart({ runs, wrRunsOnly = true, releaseYear }: WR
 		}
 		// setTopPlayersAndRuns(keepTeamRuns);
 		const savedTeamNames = Object.keys(keepTeamRuns);
-		console.log(keepTeamRuns);
-
 		for(const run of sorted) {
 			const teamKey = [...run.player_ids].sort().join(" ");
 			if(savedTeamNames.includes(teamKey)) {
