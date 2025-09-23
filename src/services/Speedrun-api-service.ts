@@ -8,6 +8,11 @@ export type GamesRequest = {
 	next: string | null;
 };
 
+function fixHttpToHttps(link: string | null) {
+	if (!link) return null;
+	return !link.includes("https") ? link.replace("http", "https") : link;
+}
+
 function mapPagination(data: { pagination: { links: { rel?: string; uri?: string }[] } }): {
 	prev: string | null;
 	next: string | null;
@@ -19,7 +24,7 @@ function mapPagination(data: { pagination: { links: { rel?: string; uri?: string
 		const found = links.find((l) => l?.rel === rel)?.uri;
 		return typeof found === "string" ? found : null;
 	};
-	return { prev: findUri("prev"), next: findUri("next") };
+	return { prev: fixHttpToHttps(findUri("prev")), next: fixHttpToHttps(findUri("next")) };
 }
 type SrcCategoryVariables = {
 	id: string;
@@ -210,7 +215,8 @@ export const SpeedRunApiService = {
 			out = out.concat(_data);
 			const next = pagination.links.find((link) => link.rel == "next");
 			if (!next) break;
-			uri = next.uri;
+
+			uri = fixHttpToHttps(next.uri) as string;
 		}
 
 		return {
